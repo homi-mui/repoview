@@ -1,4 +1,4 @@
-Unreleased:
+Version 0.7.1:
 	* introduce environment variables using -E or --environment
 	* fix --output-dir
 
