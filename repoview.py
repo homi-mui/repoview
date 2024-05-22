@@ -140,8 +140,20 @@ class Repoview:
         repo_data = {
                      'title':      opts.title,
                      'letters':    letters,
-                     'my_version': VERSION
+                     'my_version': VERSION,
+                     'env':        {}
                     }
+
+        try:
+            assert opts.env is not None
+            repo_data['env'] = {
+                e.split('=', 1)[0]: e.split('=', 1)[1] for e in opts.env
+            }
+        except AssertionError:
+            pass
+        except IndexError:
+            sys.stderr.write('invalid environment arguments. Exiting.\n')
+            sys.exit(1)
 
         def ymd(stamp):
             return time.strftime('%Y-%m-%d', time.localtime(int(stamp)))
@@ -929,6 +941,9 @@ def main():
         help='Describe the repository in a few words. '
         'By default, "%(default)s" is used. '
         'E.g.: -t "Extras for Fedora Core 4 x86"')
+    tpl_opts.add_argument('-E', '--environment', dest='env', action='append',
+        help='Add environment variables for usage in templates. '
+        'E.g.: -E "foo=bar" -E "baz=yatta"')
     rss_opts = parser.add_argument_group("RSS specific options")
     rss_opts.add_argument('-u', '--url', dest='url',
         help='Repository URL to use when generating the RSS feed. E.g.: '
