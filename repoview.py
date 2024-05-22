@@ -36,7 +36,7 @@ import sys
 import time
 from functools import cmp_to_key
 import hashlib as md5
-from optparse import OptionParser
+from argparse import ArgumentParser
 import jinja2
 from rpm import labelCompare
 from xml.etree.ElementTree import fromstring, ElementTree, TreeBuilder
@@ -104,8 +104,8 @@ class Repoview:
 
     def __init__(self, opts):
         """
-        @param opts: OptionParser's opts
-        @type  opts: OptionParser
+        @param opts: ArgumentParser's opts
+        @type  opts: ArgumentParser
         """
         # list of files to remove at the end of processing
         self.cleanup = []
@@ -887,56 +887,56 @@ def main():
 
     @rtype: void
     """
-    usage = 'usage: %prog [options] repodir'
-    parser = OptionParser(usage=usage, version='%prog ' + VERSION)
-    parser.add_option('-i', '--ignore-package', dest='ignore', action='append',
+    parser = ArgumentParser()
+
+    parser.add_argument("args", nargs=1, help="path to the repository")
+    parser.add_argument('--version', action='version', version='%(prog)s '+VERSION)
+    parser.add_argument('-q', '--quiet', dest='quiet', action='store_true',
+        help='Do not output anything except fatal errors.')
+    parser.add_argument('-f', '--force', dest='force', action='store_true',
+        help='Regenerate the pages even if the repomd checksum has not changed')
+    parser.add_argument('-s', '--state-dir', dest='statedir',
+        help='Create the state-tracking db in this directory '
+        '(default: store in output directory)')
+
+    repo_opts = parser.add_argument_group("repository specific options")
+    repo_opts.add_argument('-i', '--ignore-package', dest='ignore', action='append',
         default=[],
         help='Optionally ignore these packages -- can be a shell-style glob. '
         'This is useful for excluding debuginfo packages, e.g.: '
         '"-i *debuginfo* -i *doc*". '
         'The globbing will be done against name-epoch-version-release, '
         'e.g.: "foo-0-1.0-1"')
-    parser.add_option('-x', '--exclude-arch', dest='xarch', action='append',
+    repo_opts.add_argument('-x', '--exclude-arch', dest='xarch', action='append',
         default=[],
         help='Optionally exclude this arch. E.g.: "-x src -x ia64"')
-    parser.add_option('-k', '--template-dir', dest='templatedir',
+    repo_opts.add_argument('-c', '--comps', dest='comps',
+        help='Use an alternative comps.xml file (default: off)')
+
+    tpl_opts = parser.add_argument_group("template specific options")
+    tpl_opts.add_argument('-k', '--template-dir', dest='templatedir',
         default=DEFAULT_TEMPLATEDIR,
         help='Use an alternative directory with kid templates instead of '
-        'the default: %default. The template directory must contain four '
+        'the default: %(default)s. The template directory must contain four '
         'required template files: index.kid, group.kid, package.kid, rss.kid '
         'and the "layout" dir which will be copied into the repoview directory')
-    parser.add_option('-o', '--output-dir', dest='outdir',
+    tpl_opts.add_argument('-o', '--output-dir', dest='outdir',
         default='repoview',
         help='Create the repoview pages in this subdirectory inside '
-        'the repository (default: "%default")')
-    parser.add_option('-s', '--state-dir', dest='statedir',
-        default=None,
-        help='Create the state-tracking db in this directory '
-        '(default: store in output directory)')
-    parser.add_option('-t', '--title', dest='title',
+        'the repository (default: "%(default)s")')
+    tpl_opts.add_argument('-t', '--title', dest='title',
         default='Repoview',
         help='Describe the repository in a few words. '
-        'By default, "%default" is used. '
+        'By default, "%(default)s" is used. '
         'E.g.: -t "Extras for Fedora Core 4 x86"')
-    parser.add_option('-u', '--url', dest='url',
-        default=None,
+    rss_opts = parser.add_argument_group("RSS specific options")
+    rss_opts.add_argument('-u', '--url', dest='url',
         help='Repository URL to use when generating the RSS feed. E.g.: '
         '-u "http://fedoraproject.org/extras/4/i386". Leaving it off will '
         'skip the rss feed generation')
-    parser.add_option('-f', '--force', dest='force', action='store_true',
-        default=0,
-        help='Regenerate the pages even if the repomd checksum has not changed')
-    parser.add_option('-q', '--quiet', dest='quiet', action='store_true',
-        default=0,
-        help='Do not output anything except fatal errors.')
-    parser.add_option('-c', '--comps', dest='comps',
-        default=None,
-        help='Use an alternative comps.xml file (default: off)')
-    (opts, args) = parser.parse_args()
-    if not args:
-        parser.error('Incorrect invocation.')
 
-    opts.repodir = args[0]
+    opts = parser.parse_args()
+    opts.repodir = opts.args[0]
     Repoview(opts)
 
 if __name__ == '__main__':
