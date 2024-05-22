@@ -110,7 +110,10 @@ class Repoview:
         # list of files to remove at the end of processing
         self.cleanup = []
         self.opts    = opts
-        self.outdir  = os.path.join(opts.repodir, 'repoview')
+        if opts.outdir:
+            self.outdir = opts.outdir
+        else:
+            self.outdir = os.path.join(opts.repodir, 'repoview')
 
         self.exclude    = '1=1'
         self.state_data = {} #?

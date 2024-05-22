@@ -1,3 +1,6 @@
+Unreleased:
+	* fix --output-dir
+
 Version 0.7.0:
 	* rewritten for python3
 	* replace yum/rpmUtils with rpm
