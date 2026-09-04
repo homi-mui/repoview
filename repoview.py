@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/libexec/platform-python
 # -*- mode: Python; indent-tabs-mode: nil; -*-
 """
 Repoview is a small utility to generate static HTML pages for a repodata
@@ -41,6 +41,7 @@ import jinja2
 from rpm import labelCompare
 from xml.etree.ElementTree import fromstring, ElementTree, TreeBuilder
 import sqlite3 as sqlite
+import subprocess
 
 ##
 # Some hardcoded constants
@@ -518,9 +519,12 @@ class Repoview:
             for frow in frows:
                 fidx = 0
                 (dirname, filenames, filetypes) = frow
-                for fname in filenames.split('/'):
-                    filelist.append((filetypes[fidx], (dirname + '/' + fname)))
-                    fidx += 1
+                for fidx, fname in enumerate(filenames.split('/')):
+                    if not fname:
+                        continue
+
+                filetype = filetypes[fidx] if fidx < len(filetypes) else 'file'
+                filelist.append((filetype, dirname + '/' + fname))
 
             pkg_data['rpms'].append((epoch, version, release, arch,
                                      time_build, size, location_href,
@@ -655,16 +659,11 @@ class Repoview:
 
     def z_handler(self, dbfile):
         """
-        If the database file is compressed, uncompresses it and returns the
-        filename of the uncompressed file.
+        Return an uncompressed metadata file.
 
-        @param dbfile: the name of the file
-        @type  dbfile: str
-
-        @return: the name of the uncompressed file
-        @rtype:  str
+        Supports gzip, bzip2, xz, and Zstandard-compressed files.
         """
-        (_, ext) = os.path.splitext(dbfile)
+        _, ext = os.path.splitext(dbfile)
 
         if ext == '.bz2':
             from bz2 import BZ2File
@@ -675,47 +674,78 @@ class Repoview:
         elif ext == '.xz':
             from lzma import LZMAFile
             zfd = LZMAFile(dbfile)
+        elif ext == '.zst':
+            import tempfile
+
+            fd, unzname = tempfile.mkstemp('.repoview')
+            os.close(fd)
+            self.cleanup.append(unzname)
+
+            with open(unzname, 'wb') as unzfd:
+                subprocess.run(
+                    ['zstd', '--quiet', '--decompress', '--stdout', dbfile],
+                    check=True,
+                    stdout=unzfd,
+                )
+
+            return unzname
         else:
-            # not compressed (or something odd)
             return dbfile
 
         import tempfile
-        (unzfd, unzname) = tempfile.mkstemp('.repoview')
+
+        fd, unzname = tempfile.mkstemp('.repoview')
+        os.close(fd)
         self.cleanup.append(unzname)
 
-        unzfd = open(unzname, 'wb')
+        with open(unzname, 'wb') as unzfd:
+            while True:
+                data = zfd.read(16384)
+                if not data:
+                    break
+                unzfd.write(data)
 
-        while True:
-            data = zfd.read(16384)
-            if not data:
-                break
-            unzfd.write(data)
         zfd.close()
-        unzfd.close()
-
         return unzname
 
     def setup_comps_groups(self, compsxml):
         """
-        Utility method for parsing comps.xml.
+        Parse Comps XML without the removed EL7 yum Python API.
 
-        @param compsxml: the location of comps.xml
-        @type  compsxml: str
-
-        @rtype: void
+        @param compsxml: location of comps.xml
+        @type compsxml: str
         """
-        from yum.comps import Comps
-
         self.say('Parsing comps.xml...')
-        comps = Comps()
-        comps.add(compsxml)
 
-        for group in comps.groups:
-            if not group.user_visible or not group.packages:
+        compsxml = self.z_handler(compsxml)
+        root = ElementTree(file=compsxml).getroot()
+
+        for group in root.findall('group'):
+            groupid = group.findtext('id')
+            name = group.findtext('name')
+            description = group.findtext('description')
+            user_visible = group.findtext('uservisible', default='true').lower()
+
+            if not groupid or not name or user_visible != 'true':
                 continue
-            group_filename = _mkid(GRPFILE % group.groupid)
-            self.groups.append([group.name, group_filename, group.description,
-                                group.packages])
+
+            packages = [
+                package.text
+                for package in group.findall('./packagelist/packagereq')
+                if package.text
+            ]
+
+            if not packages:
+                continue
+
+            group_filename = _mkid(GRPFILE % groupid)
+            self.groups.append([
+                name,
+                group_filename,
+                description,
+                packages,
+            ])
+
         self.say('done\n')
 
     def setup_rpm_groups(self):
