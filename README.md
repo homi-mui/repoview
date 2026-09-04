@@ -1,6 +1,7 @@
 # repoview
 
-Repoview parses RPM repository metadata and generates static HTML pages for browsing over HTTP.
+Repoview parses RPM repository metadata and generates static HTML pages for browsing over HTTP.  
+This is a fork from https://github.com/philfry/repoview extended with support for xz and Zstandard-compressed repository metadata files and works with new-ish python versions
 
 ## Supported platform and repository metadata
 
@@ -10,8 +11,6 @@ Repoview parses RPM repository metadata and generates static HTML pages for brow
 
 ## Installation (EL9/EL10)
 
-RPM is the supported deployment method for EL9/EL10.
-
 1. Build the RPM locally (see [Source archive and RPM build](#source-archive-and-rpm-build)).
 2. Install it with `dnf`:
 
@@ -19,17 +18,16 @@ RPM is the supported deployment method for EL9/EL10.
 sudo dnf install /path/to/repoview-<version>-<release>.noarch.rpm
 ```
 
-The RPM pulls required runtime dependencies declared in `repoview.spec` (`python3-rpm`, `python3dist(jinja2)`, `python3dist(zstandard) >= 0.19`).
-
-For production/system deployment on EL9/EL10, use RPM installation rather than `pip`.
+The RPM pulls required runtime dependencies (`python3-rpm`, `python3dist(jinja2)`, `python3dist(zstandard) >= 0.19`).
 
 ## Development and testing
 
-Use a virtual environment and a local install for development/testing:
+clone this repo and use a virtual environment and a local install for development/testing:
 
 ```bash
-python3 -m venv .venv
-. .venv/bin/activate
+mkdir -p $HOME/.venv
+python3 -m venv $HOME/.venv/repoview
+source $HOME/.venv/repoview/bin/activate
 python -m pip install --upgrade pip
 python -m pip install pytest
 python -m pip install .
