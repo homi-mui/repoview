@@ -7,9 +7,10 @@ format that's easily browsable via http by creating a set of static HTML pages.
 
 ### REQUIREMENTS
 
-  * python3
+  * python3 (CPython 3.9-3.11)
   * python3-jinja2
   * python3-rpm
+  * python3-zstandard (preferred for .zst metadata; otherwise an external `zstd` command is required)
   * sqlite3
 
 ### AUTHORS
