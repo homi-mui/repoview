@@ -75,7 +75,7 @@ RSSFILE = 'latest-feed.xml'
 ISOFORMAT = '%a, %d %b %Y %H:%M:%S %z'
 REPO_XML_NAMESPACE = 'http://linux.duke.edu/metadata/repo'
 
-VERSION = '0.7.1'
+VERSION = '0.7.2'
 SUPPORTED_DB_VERSION = 10
 DEFAULT_TEMPLATEDIR = '/usr/share/repoview/templates'
 
