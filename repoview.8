@@ -1,4 +1,4 @@
-.TH "repoview" "8" "0.6.6" "Konstantin Ryabitsev" "Applications/Utilities"
+.TH "repoview" "8" "0.7.1" "Konstantin Ryabitsev" "Applications/Utilities"
 
 .SH NAME
 \fBrepoview\fR \- Make YUM repositories browseable
@@ -30,7 +30,7 @@ Optionally exclude this arch. E.g.:
 .TP
 .B \-k, \-\-template\-dir DIR
 Use an alternative directory with Jinja2 templates instead of the 
-default: ./templates. The template directory must contain four 
+default: /usr/share/repoview/templates. The template directory must contain four 
 required template files: index.j2, group.j2, package.j2, rss.j2 and 
 the "layout" dir which will be copied into the output directory.
 .TP
@@ -43,15 +43,20 @@ Create the state-tracking db in this directory
 (default: store in output directory)
 .TP
 .B \-t, \-\-title TITLE
-Describe the repository in a few words. By default "RepoView" is used. 
+Describe the repository in a few words. By default "Repoview" is used. 
 E.g.:
 .br
-\-t "Extras for Fedora Core 3 x86"
+\-t "Extras for Fedora Core 4 x86"
+.TP
+.B \-E, \-\-environment KEY=VALUE
+Add environment variables for usage in templates. E.g.:
+.br
+\-E "foo=bar" \-E "baz=yatta"
 .TP
 .B \-u, \-\-url URL
 Repository URL to use when generating the RSS feed. E.g.: 
 .br
-\-u "http://fedoraproject.org/extras/5/i386"
+\-u "http://fedoraproject.org/extras/4/i386"
 .br
 Not providing a url will disable RSS feed generation.
 .TP
@@ -64,7 +69,7 @@ Do not output anything except fatal errors.
 .B \-c, \-\-comps
 Use an alternative comps.xml file, instead of the one specified in repomd.
 .TP
-.B \-V, \-\-version
+.B \-\-version
 Print version number and exit.
 .TP
 .B \-h, \-\-help
