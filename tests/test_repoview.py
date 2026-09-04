@@ -1,5 +1,6 @@
 import bz2
 import gzip
+import importlib.util
 import lzma
 import sqlite3
 import subprocess
@@ -9,10 +10,13 @@ import xml.etree.ElementTree as ET
 
 import pytest
 
-import repoview
-
 ROOT = Path(__file__).resolve().parents[1]
 TEMPLATE_DIR = ROOT / "templates"
+MODULE_PATH = ROOT / "repoview.py"
+MODULE_SPEC = importlib.util.spec_from_file_location("repoview", MODULE_PATH)
+repoview = importlib.util.module_from_spec(MODULE_SPEC)
+assert MODULE_SPEC is not None and MODULE_SPEC.loader is not None
+MODULE_SPEC.loader.exec_module(repoview)
 
 
 def make_options(repo_dir, **overrides):
