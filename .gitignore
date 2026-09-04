@@ -1,0 +1,11 @@
+__pycache__/
+.pytest_cache/
+build/
+dist/
+.rpmbuild/
+BUILD/
+BUILDROOT/
+RPMS/
+SOURCES/
+SPECS/
+SRPMS/

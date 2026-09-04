@@ -25,7 +25,7 @@ format that's easily browsable via http by creating a set of static HTML pages.
 
 ### URL
 
-https://github.com/philfry/repoview
+https://github.com/homi-mui/repoview
 
 ### COPYRIGHT AND LICENSE
 
@@ -37,3 +37,20 @@ For licensing and copying information see COPYING.
 ### USAGE
 
 See **repoview(8)** or `repoview --help`.
+
+### RPM BUILDING
+
+For Fedora/EL9 RPM builds, install `rpm-build`, `python3`, `python3-rpm`,
+`python3-jinja2`, and `python3-zstandard`.
+
+Create the source archive expected by `repoview.spec`:
+
+    ./scripts/create-source-archive.sh
+
+Build the source and binary RPMs locally:
+
+    archive=$(./scripts/create-source-archive.sh)
+    mkdir -p ~/rpmbuild/{BUILD,BUILDROOT,RPMS,SOURCES,SPECS,SRPMS}
+    cp "$archive" ~/rpmbuild/SOURCES/
+    rpmbuild -bs --define "_topdir $HOME/rpmbuild" repoview.spec
+    rpmbuild -bb --define "_topdir $HOME/rpmbuild" repoview.spec
